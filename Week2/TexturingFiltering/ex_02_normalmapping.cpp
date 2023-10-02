@@ -61,8 +61,11 @@ void loadSpotMesh(glhelper::Mesh* mesh)
 
 	std::vector<Eigen::Vector3f> verts(aimesh->mNumVertices);
 	std::vector<Eigen::Vector3f> norms(aimesh->mNumVertices);
+	std::vector<Eigen::Vector3f> tans(aimesh->mNumVertices);
+	std::vector<Eigen::Vector3f> bitans(aimesh->mNumVertices);
 	std::vector<Eigen::Vector2f> uvs(aimesh->mNumVertices);
 	std::vector<GLuint> elems(aimesh->mNumFaces*3);
+
 	memcpy(verts.data(), aimesh->mVertices, aimesh->mNumVertices * sizeof(aiVector3D));
 	memcpy(norms.data(), aimesh->mNormals, aimesh->mNumVertices * sizeof(aiVector3D));
 	for (size_t v = 0; v < aimesh->mNumVertices; ++v) {
@@ -77,6 +80,8 @@ void loadSpotMesh(glhelper::Mesh* mesh)
 
 	mesh->vert(verts);
 	mesh->norm(norms);
+	mesh->tangent(tans);
+	mesh->bitangent(bitans);
 	mesh->elems(elems);
 	mesh->tex(uvs);
 }
@@ -180,6 +185,10 @@ int main()
 			cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
 			albedoTexture = createTexture(image);
 		}
+
+		// normal map
+		// end normal map
+
 
 		bool shouldQuit = false;
 		SDL_Event event;

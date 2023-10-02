@@ -95,9 +95,17 @@ int main()
 
 		// --- Your code here ---
 		// Here you should load the texture image from ../models/spot/spot_texture.png using OpenCV
+		auto cvTex = cv::imread("../models/spot/spot_texture.png");
+		GLuint texture;
 		// Create an OpenGL texture from this image (use glGenTextures, glTexImage2D etc.)
+		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, cvTex.cols, cvTex.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, cvTex.data);
+		glGenerateTextureMipmap(texture);
+
 		// Also, make sure to set the sampler uniform (called tex) in the texturedMeshShader
 		// to match the image unit you plan to use (you only have one texture, so you can set it to 0).
+		glProgramUniform1i(texturedMeshShader.get(), texturedMeshShader.uniformLoc("tex"), 0);
 		// Hints
 		// -----
 		// 1. If your texture looks black, it may be because you haven't generated MIP maps for your texture
@@ -142,6 +150,11 @@ int main()
 			// --- Your code here ---
 			// Before rendering the Spot mesh, bind the texture you created to the
 			// correct image unit (probably 0, so GL_TEXTURE0)
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, texture);
+			spotMesh.render();
+
+
 
 			SDL_GL_SwapWindow(window);
 
@@ -153,6 +166,7 @@ int main()
 
 		// --- Your code here ---
 		// Make sure to delete the texture you created here.
+		glDeleteTextures(1, &texture);
 	}
 
 
