@@ -80,9 +80,14 @@ void loadMesh(glhelper::Mesh* mesh, const std::string &filename, int idx = 0)
 	std::vector<Eigen::Vector3f> verts(aimesh->mNumVertices);
 	std::vector<Eigen::Vector3f> norms(aimesh->mNumVertices);
 	std::vector<Eigen::Vector2f> uvs(aimesh->mNumVertices);
+	std::vector<Eigen::Vector3f> tangents(aimesh->mNumVertices);
+	std::vector<Eigen::Vector3f> bitans(aimesh->mNumVertices);
+
 	std::vector<GLuint> elems(aimesh->mNumFaces*3);
 	memcpy(verts.data(), aimesh->mVertices, aimesh->mNumVertices * sizeof(aiVector3D));
 	memcpy(norms.data(), aimesh->mNormals, aimesh->mNumVertices * sizeof(aiVector3D));
+	memcpy(tangents.data(), aimesh->mTangents, aimesh->mNumVertices * sizeof(aiVector3D));
+	memcpy(bitans.data(), aimesh->mBitangents, aimesh->mNumVertices * sizeof(aiVector3D));
 	for (size_t v = 0; v < aimesh->mNumVertices; ++v) {
 		uvs[v][0] = aimesh->mTextureCoords[0][v].x;
 		uvs[v][1] = 1.f-aimesh->mTextureCoords[0][v].y;
@@ -95,6 +100,8 @@ void loadMesh(glhelper::Mesh* mesh, const std::string &filename, int idx = 0)
 
 	mesh->vert(verts);
 	mesh->norm(norms);
+	mesh->tangent(tangents);
+	mesh->bitangent(bitans);
 	mesh->elems(elems);
 	mesh->tex(uvs);
 }

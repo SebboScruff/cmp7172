@@ -120,6 +120,7 @@ int main()
 	{
 		glhelper::ShaderProgram celShadingShader({ "../shaders/CelShading.vert", "../shaders/CelShading.frag" });
 		glhelper::ShaderProgram fixedColorShader({ "../shaders/FixedColor.vert", "../shaders/FixedColor.frag" });
+		glhelper::ShaderProgram backfaceExpansionShader({ "../shaders/BackfaceShellExpansion.vert", "../shaders/BackfaceShellExpansion.frag" });
 		glhelper::RotateViewer viewer(winWidth, winHeight);
 		//glhelper::FlyViewer viewer(winWidth, winHeight);
 		glhelper::Mesh spotMesh, sphereMesh;
@@ -134,6 +135,10 @@ int main()
 		glProgramUniform1i(celShadingShader.get(),celShadingShader.uniformLoc("lightingTexture"), 1);
 		glProgramUniform3f(celShadingShader.get(), celShadingShader.uniformLoc("lightPosWorld"), lightPos.x(), lightPos.y(), lightPos.z());
 		glProgramUniform4f(fixedColorShader.get(), fixedColorShader.uniformLoc("color"), 1.f, 1.f, 1.f, 1.f);
+
+		// Cel Shading Border Settings Here
+		glProgramUniform1f(backfaceExpansionShader.get(), backfaceExpansionShader.uniformLoc("expansionAmt"), 0.03f);
+		glProgramUniform4f(backfaceExpansionShader.get(), backfaceExpansionShader.uniformLoc("color"), 0.f, 0.f, 0.f, 1.f);
 
 		cv::Mat spotTextureImage = cv::imread("../models/spot/spot_texture.png");
 		cv::cvtColor(spotTextureImage, spotTextureImage, cv::COLOR_BGR2RGB);
@@ -150,7 +155,15 @@ int main()
 
 		// --- Your Code Here ---
 		// Load one of the 1D lighting images (e.g. ../images/cel_texture_2level.png)
+		cv::Mat celTexImage = cv::imread("../images/cel_texture_3level.png");
+		cv::cvtColor(celTexImage, celTexImage, cv::COLOR_BGR2GRAY);
+		GLuint celTexture;
 		// Load it as a 1D texture (use GL_TEXTURE_1D)
+		glGenTextures(1, &celTexture);
+		glBindTexture(GL_TEXTURE_1D, celTexture);
+		glTexImage1D(GL_TEXTURE_1D, 0, GL_R8, celTexImage.cols, 0, GL_RED, GL_UNSIGNED_BYTE, celTexImage.data);
+		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		// Some of the settings will need to be adjusted from using 2D textures
 		// like you did in the last lab - do check the specs!
 
@@ -191,12 +204,15 @@ int main()
 				glProgramUniform3f(celShadingShader.get(), celShadingShader.uniformLoc("lightPosWorld"), lightPos.x(), lightPos.y(), lightPos.z());
 			}
 
-			glDisable(GL_CULL_FACE);
+			glEnable(GL_CULL_FACE);
 			glActiveTexture(GL_TEXTURE0 + 0);
 			glBindTexture(GL_TEXTURE_2D, spotTexture);
 			// -- Your Code Here --
 			// Bind your new 1D lighting texture to image unit 1.
+			glActiveTexture(GL_TEXTURE0 + 1);
+			glBindTexture(GL_TEXTURE_1D, celTexture);
 
+			glCullFace(GL_BACK);
 			spotMesh.render();
 			sphereMesh.render();
 
@@ -205,6 +221,11 @@ int main()
 			// expansion to make some nice black outlines.
 			// Remember to change the culling settings to cull frontfaces rather 
 			// than backfaces, and change them back afterwards!
+			spotMesh.shaderProgram(&backfaceExpansionShader);
+			glCullFace(GL_FRONT);
+			spotMesh.render();
+
+			spotMesh.shaderProgram(&celShadingShader);
 
 			gltBeginDraw();
 			gltColor(1.f, 1.f, 1.f, 1.f);

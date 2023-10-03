@@ -18,7 +18,8 @@ void main()
 {
 	// --- Your Code Here ---
 	// Expand the vertices along the normals!
+	vec3 newPos = vPos + vNorm * expansionAmt;
+	gl_Position = worldToClip *  modelToWorld * vec4(newPos, 1.0f);
 
-	gl_Position = worldToClip *  modelToWorld * vec4(vPos, 1.0f);
 }
 
