@@ -19,12 +19,16 @@
 #include <gltext.h>
 /* In this exercise you'll implement the "Wrap Lighting" method used to simulate
 * larger light sources on diffuse surfaces covered in the lecture.
+* 
 * The current code shows the Spot mesh with a colour texture, but has no lighting
 * code. You should revise the WrapLighting.frag shader to implement the technique.
+* 
 * The user should be able to use some controls (e.g. up and down arrows) to adjust
 * the effect and go from point source to full hemispherical light source.
+* 
 * The mesh should be illuminated by a light source at the location of the white 
 * sphere in the scene. Make sure to scale your light intensity by 1/distance^2.
+* 
 * Pressing the space bar causes the light sphere to rotate - make sure your lighting
 * also updates in real time to match!
 * 
@@ -118,6 +122,8 @@ int main()
 		sphereMesh.modelToWorld(makeTranslationMatrix(lightPos));
 
 		glProgramUniform1i(wrapLightingShader.get(), wrapLightingShader.uniformLoc("albedoTexture"), 0);
+		glProgramUniform1f(wrapLightingShader.get(), wrapLightingShader.uniformLoc("wrapAmount"), wrapAmount);
+		glProgramUniform3f(wrapLightingShader.get(), wrapLightingShader.uniformLoc("lightPos"), lightPos.x(), lightPos.y(), lightPos.z());
 		glProgramUniform4f(fixedColorShader.get(), fixedColorShader.uniformLoc("color"), 1.f, 1.f, 1.f, 1.f);
 
 		cv::Mat bunnyTextureImage = cv::imread("../models/stanford_bunny/textures/Bunny_baseColor.png");
@@ -155,6 +161,17 @@ int main()
 					if (event.key.keysym.sym == SDLK_SPACE) {
 						lightRotating = !lightRotating;
 					}
+					else if (event.key.keysym.sym == SDLK_UP) {
+						wrapAmount += 0.1f;
+						gltSetText(text, (std::string("wrapAmount: ") + std::to_string(wrapAmount)).c_str());
+						glProgramUniform1f(wrapLightingShader.get(), wrapLightingShader.uniformLoc("wrapAmount"), wrapAmount);
+					}
+					else if (event.key.keysym.sym == SDLK_DOWN) {
+						wrapAmount -= 0.1f;
+						if (wrapAmount < 0) { wrapAmount = 0; }
+						gltSetText(text, (std::string("wrapAmount: ") + std::to_string(wrapAmount)).c_str());
+						glProgramUniform1f(wrapLightingShader.get(), wrapLightingShader.uniformLoc("wrapAmount"), wrapAmount);
+					}
 				}
 
 				// --- Your code here ---
@@ -168,6 +185,7 @@ int main()
 				if (theta > 2 * 3.14159f) theta = 0.f;
 				lightPos << 5.f * sinf(theta), 5.f, 5.f * cosf(theta);
 				sphereMesh.modelToWorld(makeTranslationMatrix(lightPos));
+				glProgramUniform3f(wrapLightingShader.get(), wrapLightingShader.uniformLoc("lightPos"), lightPos.x(), lightPos.y(), lightPos.z());
 			}
 
 			glDisable(GL_CULL_FACE);

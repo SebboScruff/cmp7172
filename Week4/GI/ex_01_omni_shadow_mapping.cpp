@@ -211,11 +211,22 @@ int main()
 		// Create your cubemap texture here, and a framebuffer object to
 		// allow you to render to it.
 		// You'll need to call glTexImage2D 6 times this time, once per face.
+		GLuint cubemapTexture;
+		glGenTextures(1, &cubemapTexture);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		for (int face = 0; face < 6; face++) {
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_DEPTH_COMPONENT, cubemapSize, cubemapSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		}
+
+		GLuint cubemapFramebuffer;
+		glGenFramebuffers(1, &cubemapFramebuffer);
+		// glBindFramebuffer(GL_FRAMEBUFFER, cubemapFramebuffer);
 
 		// Your Code Here
 		// Set this matrix to be an appropriate projection matrix for rendering your cubemaps.
 		// Feel free to use the functions in glhelper's Matrices.hpp.
 		Eigen::Matrix4f cubemapPerspective;
+		cubemapPerspective = perspective((M_PI_2), 1, shadowMapNear, shadowMapFar);
 
 		// Here are the rotations for each face of the cubemap (please do use them!)
 		const std::array<Eigen::Matrix4f, 6> cubemapRotations {
@@ -232,6 +243,7 @@ int main()
 
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
+		glEnable(GL_CULL_FACE);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		while (!shouldQuit) {
@@ -277,9 +289,11 @@ int main()
 					if (event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) {
 						if (event.key.keysym.sym == SDLK_UP) {
 							shadowMapBias += 0.01f;
+							glProgramUniform1f(shadowMappedShader.get(), shadowMappedShader.uniformLoc("bias"), shadowMapBias);
 						}
 						else {
 							shadowMapBias -= 0.01f;
+							glProgramUniform1f(shadowMappedShader.get(), shadowMappedShader.uniformLoc("bias"), shadowMapBias);
 						}
 						glProgramUniform1f(shadowMappedShader.get(), shadowMappedShader.uniformLoc("bias"), shadowMapBias);
 						updateText(text);
@@ -312,10 +326,37 @@ int main()
 			// matrix.
 			// Before rendering the main scene don't forget to unbind your framebuffer and set
 			// the viewport back to normal.
+			glBindFramebuffer(GL_FRAMEBUFFER, cubemapFramebuffer);
+			glViewport(0, 0, cubemapSize, cubemapSize);
+			for (int face = 0; face < 6; face++) {
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, cubemapTexture, 0);
+
+				Eigen::Matrix4f worldToClipMatrix = Eigen::Matrix4f::Identity();
+
+				worldToClipMatrix *= cubemapPerspective;
+				worldToClipMatrix *= cubemapRotations[face];
+				worldToClipMatrix *= makeTranslationMatrix(-lightPos);
+
+				glProgramUniformMatrix4fv(shadowMappedShader.get(), shadowMappedShader.uniformLoc("shadowWorldToClip"), 1, false, worldToClipMatrix.data());
+				
+				glClear(GL_DEPTH_BUFFER_BIT);
+
+				for (glhelper::Renderable* mesh : scene) {
+					if (mesh->castsShadow()) {
+						mesh->render();
+					}
+				}
+			}
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glViewport(0, 0, winWidth, winHeight);
 
 			bunnyTexture.bindToImageUnit(0);
 			// Your Code Here
 			// Also bind your created shadow cubemap texture here, to image unit 1.
+			glActiveTexture(GL_TEXTURE0 + 1);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+
 			for (glhelper::Renderable* mesh : scene) {
 				mesh->render();
 			}
@@ -334,6 +375,7 @@ int main()
 		}
 		// Your Code Here
 		// Don't forget to delete your cubemap texture.
+		glDeleteTextures(1, &cubemapTexture);
 	}
 
 

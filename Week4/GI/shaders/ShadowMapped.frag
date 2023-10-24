@@ -11,6 +11,8 @@ uniform vec3 lightPosWorld;
 
 uniform float nearPlane, farPlane;
 
+uniform float bias;
+
 void main()
 {
 	// Your code here
@@ -20,9 +22,17 @@ void main()
 	// and nearPlane values.
 	// If the point is in shadow, scale down the light intensity
 
-	vec3 lightDir = normalize(lightPosWorld - fragPosWorld);
+	float lightToFragDistance = length(lightPosWorld - fragPosWorld);
+
+	vec3 lightDir = normalize(fragPosWorld - lightPosWorld);
+	float lightToNearest = texture(shadowMap, lightDir).r; // read from depth map to find the nearest point from the light to any mesh
+
 	float lightDot = clamp(dot(lightDir, normalize(worldNorm)), 0, 1);
 	vec3 colorRgb = color.rgb * lightDot;
+
+	if(lightToFragDistance - bias > lightToNearest){
+		colorOut.rgb *= 0.5f;
+	}
 
 	colorOut.rgb = colorRgb;
 	colorOut.a = 1.0;

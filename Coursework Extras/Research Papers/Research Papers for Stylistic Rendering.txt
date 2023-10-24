@@ -1,0 +1,21 @@
+https://dl.acm.org/doi/pdf/10.1145/340916.340918 - Stylized Rendering Techniques For Scalable Real-Time 3D Animation (2000)
+	> From lab slides; focuses on Pencil-Sketch style shading.
+
+
+https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=9c4343398b636fd0924b8aae5964c5f4a1848f0e - Non-Photorealistic Rendering
+using Watercolor Inspired Textures and Illumination (2001)
+	> An example method for watercolor-style rendering
+
+https://dl.acm.org/doi/pdf/10.1145/258734.258896 - Computer-Generated Watercolor (1997)
+	> Looks at the properties of watercolor vs other paint styles
+	> Almost 30 years old - dont rely on this one too much
+
+(not a paper but worth a look) https://artineering.io/styles/watercolor
+
+Primary sources for Artineering page:
+
+https://dl.acm.org/doi/pdf/10.1145/1124728.1124751 - Interactive watercolor rendering with temporal coherence and abstraction
+	> Very interesting Color Modification Formula
+
+https://dl.acm.org/doi/pdf/10.5555/2981324.2981332 - Art-directed Watercolor Rendered Animation
+	> THIS ONE IS REALLY GOOD
